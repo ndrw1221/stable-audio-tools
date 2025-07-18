@@ -1,0 +1,10 @@
+{
+    "dataset_type": "pre_encoded",
+    "datasets": [
+        {
+            "id": "pili_no_vocals_47s_latent",
+            "path": "/mnt/gestalt/home/ndrw1221/datasets/pili/pili_no_vocals_47s_pre_encode"
+        }
+    ],
+    "random_crop": false
+}
