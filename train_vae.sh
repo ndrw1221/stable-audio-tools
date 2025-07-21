@@ -1,0 +1,8 @@
+python3 train.py \
+--dataset-config stable_audio_tools/configs/dataset_configs/anime_audio_vae.json \
+--model-config stable_audio_tools/configs/model_configs/autoencoders/stable_audio_open_1.0_vae.json \
+--pretrained-ckpt-path stable-audio-open-1.0/vae/vae_model.ckpt \
+--save-dir /mnt/gestalt/home/ndrw1221/stable_audio_tools_output \
+--name stable-audio-tool-pili-vae \
+--checkpoint-every 5000 \
+--batch-size 8 \
