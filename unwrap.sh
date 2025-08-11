@@ -1,4 +1,4 @@
 python unwrap_model.py \
---model-config stable_audio_tools/configs/model_configs/txt2audio/stable_audio_open_1_0.json \
---ckpt-path output/vae-pili/2ynt3kgd/checkpoints/epoch=254-step=82000.ckpt \
---name vae-pili-step=82000 \
+--model-config stable_audio_tools/configs/model_configs/txt2audio/stable_audio_open_1_0_anime.json \
+--ckpt-path output/sao-anime/qwen_tags_full_cont._cont./checkpoints/epoch=498-step=200000.ckpt \
+--name sao-anime-tags-full-step=200000 \

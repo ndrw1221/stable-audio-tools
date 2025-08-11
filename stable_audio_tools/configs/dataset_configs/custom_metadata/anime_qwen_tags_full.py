@@ -18,6 +18,4 @@ def get_custom_metadata(info, audio):
     # Use relative path as the prompt
     return {
         "prompt": prompt,
-        "seconds_start": info["seconds_start"],
-        "seconds_total": info["seconds_total"],
     }

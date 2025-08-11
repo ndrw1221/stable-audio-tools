@@ -1,0 +1,10 @@
+{
+    "dataset_type": "audio_dir",
+    "datasets": [
+        {
+            "id": "anime_dataset",
+            "path": "/home/ndrw1221/lab-projects/new-anime-dataset-preprocess/no_vocals/"
+        }
+    ],
+    "random_crop": false
+}

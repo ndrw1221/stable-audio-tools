@@ -113,16 +113,16 @@
             }
         },
         "demo": {
-            "demo_every": 5000,
+            "demo_every": 20000,
             "demo_steps": 150,
             "num_demos": 6,
             "demo_cond": [
                 {"prompt": "宮崎駿", "seconds_start": 0, "seconds_total": 48},
-                {"prompt": "柯南", "seconds_start": 0, "seconds_total": 48},
+                {"prompt": "名偵探柯南", "seconds_start": 0, "seconds_total": 48},
                 {"prompt": "進擊的巨人", "seconds_start": 0, "seconds_total": 48},
                 {"prompt": "Japanese anime, pop, high-energy, fast-paced", "seconds_start": 0, "seconds_total": 48},
-                {"prompt": "rock, high-energy, energetic, fast-paced", "seconds_start": 0, "seconds_total": 48},
-                {"prompt": "jazz, mid-tempo, romantic, uplifting", "seconds_start": 0, "seconds_total": 48}
+                {"prompt": "Japanese anime, rock, high-energy, energetic, fast-paced", "seconds_start": 0, "seconds_total": 48},
+                {"prompt": "Japanese anime", "seconds_start": 0, "seconds_total": 48}
             ],
             "demo_cfg_scales": [6]
         }
