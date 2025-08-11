@@ -1,0 +1,11 @@
+{
+    "dataset_type": "audio_dir",
+    "datasets": [
+        {
+            "id": "anime_dataset",
+            "path": "/home/ndrw1221/lab-projects/anime-dataset-preprocess/anime-dataset/no_vocals_full",
+            "custom_metadata_module": "/home/ndrw1221/lab-projects/stable-audio-tools/stable_audio_tools/configs/dataset_configs/custom_metadata/anime_qwen_tags_full_bpm.py"
+        }
+    ],
+    "random_crop": true
+}
