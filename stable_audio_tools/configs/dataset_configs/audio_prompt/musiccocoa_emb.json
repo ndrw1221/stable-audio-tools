@@ -1,0 +1,12 @@
+{
+    "dataset_type": "pre_encoded",
+    "datasets": [
+        {
+            "id": "new_anime_dataset",
+            "path": "/home/ndrw1221/lab-projects/new-anime-dataset-preprocess/pre-encoded",
+            "custom_metadata_module": "/home/ndrw1221/lab-projects/stable-audio-tools/stable_audio_tools/configs/dataset_configs/audio_prompt/musiccoca_emb.py"
+        }
+    ],
+    "random_crop": true,
+    "latent_crop_length": 1024
+}
