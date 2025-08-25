@@ -1,6 +1,7 @@
 #Heavily influenced by https://github.com/facebookresearch/audiocraft/blob/main/audiocraft/modules/conditioners.py
 
 import torch
+import numpy as np
 import logging, warnings
 import string
 import typing as tp
@@ -544,6 +545,145 @@ class PretransformConditioner(Conditioner):
 
         return [latents, torch.ones(latents.shape[0], latents.shape[2]).to(latents.device)]
 
+
+class PreEncodedLatentConditioner(Conditioner):
+    """
+    Conditioner that loads pre-encoded latents from .npy files and projects them.
+
+    Inputs are paths to .npy files containing arrays of shape (T, D_in).
+
+    Args:
+        input_dim: expected feature dimension D_in of input latents.
+        output_dim: projection output dimension D.
+        pool_across_time: if True, pool across time to (B, 1, D).
+        sample_size: target time length T_out. If longer, crop; if shorter, right-pad with zeros.
+        random_crop: when cropping, choose a random start; otherwise crop from the beginning.
+        project_out: whether to force a projection even when input_dim == output_dim.
+    """
+
+    def __init__(
+        self,
+        input_dim: int,
+        output_dim: int,
+        pool_across_time: bool = False,
+        sample_size: tp.Optional[int] = None,
+        random_crop: bool = False,
+        project_out: bool = False,
+    ):
+        super().__init__(input_dim, output_dim, project_out=project_out)
+
+        self.input_dim = input_dim
+        self.pool_across_time = pool_across_time
+        self.sample_size = sample_size
+        self.random_crop = random_crop
+
+    def _load_latent(
+        self, path_or_array: tp.Union[str, np.ndarray, torch.Tensor]
+    ) -> torch.Tensor:
+        if isinstance(path_or_array, torch.Tensor):
+            latent = path_or_array
+        else:
+            if isinstance(path_or_array, str):
+                arr = np.load(path_or_array)
+            else:
+                arr = path_or_array
+            if arr.dtype != np.float32:
+                arr = arr.astype(np.float32, copy=False)
+            latent = torch.from_numpy(arr)
+
+        if latent.dim() != 2:
+            raise ValueError(
+                f"Pre-encoded latent must be 2D [T, D_in], got shape: {tuple(latent.shape)}"
+            )
+        if latent.shape[1] != self.input_dim:
+            raise ValueError(
+                f"Expected latent feature dim {self.input_dim}, got {latent.shape[1]} (shape: {tuple(latent.shape)})"
+            )
+        return latent
+
+    def _crop_or_pad(
+        self, latent: torch.Tensor
+    ) -> tp.Tuple[torch.Tensor, torch.Tensor]:
+        # latent: [T, D_in]
+        T = latent.shape[0]
+        if self.sample_size is None:
+            mask = torch.ones(T, dtype=torch.bool, device=latent.device)
+            return latent, mask
+
+        target = int(self.sample_size)
+        if T == target:
+            mask = torch.ones(target, dtype=torch.bool, device=latent.device)
+            return latent, mask
+        if T > target:
+            if self.random_crop and T - target > 0:
+                start = int(torch.randint(0, T - target + 1, (1,)).item())
+            else:
+                start = 0
+            latent = latent[start : start + target, :]
+            mask = torch.ones(target, dtype=torch.bool, device=latent.device)
+            return latent, mask
+        # Pad to the right
+        pad_len = target - T
+        pad = torch.zeros(
+            pad_len, latent.shape[1], dtype=latent.dtype, device=latent.device
+        )
+        latent = torch.cat([latent, pad], dim=0)
+        mask = torch.cat(
+            [
+                torch.ones(T, dtype=torch.bool, device=latent.device),
+                torch.zeros(pad_len, dtype=torch.bool, device=latent.device),
+            ],
+            dim=0,
+        )
+        return latent, mask
+
+    def forward(
+        self,
+        latent_paths: tp.List[tp.Union[str, np.ndarray, torch.Tensor]],
+        device: tp.Union[torch.device, str],
+    ) -> tp.Tuple[torch.Tensor, torch.Tensor]:
+
+        proj = self.proj_out.to(device)
+        loaded = [self._load_latent(item).to(device) for item in latent_paths]
+
+        if self.pool_across_time:
+            pooled = [
+                (
+                    t.mean(dim=0)
+                    if t.shape[0] > 0
+                    else torch.zeros(self.input_dim, dtype=t.dtype, device=device)
+                )
+                for t in loaded
+            ]
+            latents = torch.stack(pooled, dim=0).unsqueeze(1)  # [B, 1, D_in]
+            masks = torch.ones(
+                latents.shape[0], 1, device=device, dtype=torch.bool
+            )  # [B, 1]
+        else:
+            if self.sample_size is None:
+                lengths = [t.shape[0] for t in loaded]
+                if len(set(lengths)) != 1:
+                    raise ValueError(
+                        f"When sample_size is None, all sequences in the batch must share the same length. "
+                        f"Got lengths: {lengths}"
+                    )
+
+            latent_mask_pairs = [self._crop_or_pad(t) for t in loaded]
+            if not latent_mask_pairs:
+                raise ValueError("latent_paths should not be empty.")
+            latents_list, masks_list = zip(*latent_mask_pairs)
+            latents = torch.stack(list(latents_list), dim=0)  # [B, T, D_in]
+            masks = torch.stack(list(masks_list), dim=0)  # [B, T] (bool)
+
+        if isinstance(proj, nn.Identity):
+            latents = latents.to(torch.float32)
+        else:
+            latents = latents.to(next(proj.parameters()).dtype)
+
+        embeddings = proj(latents)
+        return embeddings, masks
+
+
 class SourceMixConditioner(Conditioner):
     """
     A conditioner that mixes projected audio embeddings from multiple sources
@@ -755,6 +895,8 @@ def create_multi_conditioner_from_conditioning_config(config: tp.Dict[str, tp.An
                 cond_pretransform.load_state_dict(load_ckpt_state_dict(conditioner_config.pop("pretransform_ckpt_path")))
 
             conditioners[id] = SourceMixConditioner(cond_pretransform, **conditioner_config)
+        elif conditioner_type == "pre_encoded_latent":
+            conditioners[id] = PreEncodedLatentConditioner(**conditioner_config)
         else:
             raise ValueError(f"Unknown conditioner type: {conditioner_type}")
 
