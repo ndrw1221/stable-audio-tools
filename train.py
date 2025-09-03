@@ -17,6 +17,10 @@ from stable_audio_tools.training import (
     create_demo_callback_from_config,
 )
 
+import warnings
+
+warnings.filterwarnings("ignore", category=UserWarning)
+
 
 class ExceptionCallback(pl.Callback):
     def on_exception(self, trainer, module, err):
