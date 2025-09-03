@@ -1,9 +1,0 @@
-python3 train.py \
---dataset-config stable_audio_tools/configs/dataset_configs/anime/audio_tags_full_bpm.json \
---model-config stable_audio_tools/configs/model_configs/txt2audio/stable_audio_open_1_0_anime_bpm.json \
---pretrained-ckpt-path stable-audio-open-1.0/model.ckpt \
---save-dir /mnt/gestalt/home/ndrw1221/stable_audio_tools_output \
---name sao-anime \
---run-name qwen_tags_full_bpm \
---checkpoint-every 20000 \
---batch-size 8 \
