@@ -1,0 +1,12 @@
+{
+    "dataset_type": "pre_encoded",
+    "datasets": [
+        {
+            "id": "anime_dataset",
+            "path": "dataset/anime_dataset/pre_encoded",
+            "custom_metadata_module": "stable_audio_tools/configs/dataset_configs/anime_custom_data.py"
+        }
+    ],
+    "random_crop": true,
+    "latent_crop_length": 1024
+}
