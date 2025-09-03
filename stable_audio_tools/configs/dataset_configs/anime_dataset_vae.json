@@ -3,8 +3,8 @@
     "datasets": [
         {
             "id": "anime_dataset",
-            "path": "/home/ndrw1221/lab-projects/new-anime-dataset-preprocess/no_vocals/"
+            "path": "dataset/anime_dataset/audio"
         }
     ],
-    "random_crop": false
+    "random_crop": true
 }
