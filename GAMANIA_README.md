@@ -8,15 +8,15 @@
 
 ```text
 stable-audio-tools/
+├── ...
 ├── docs/
 ├── stable_audio_tools/
-├── dataset/
-│   └── anime-dataset/
-│       ├── audio/
-│       ├── pre_encoded/
-│       ├── anime_dataset.json
-│       └── anime_metadata.json
-└── ...
+└── dataset/
+    └── anime-dataset/
+        ├── audio/
+        ├── pre_encoded/
+        ├── anime_dataset.json
+        └── anime_metadata.json
 ```
 
 # 環境設置
