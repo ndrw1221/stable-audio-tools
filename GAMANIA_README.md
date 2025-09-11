@@ -76,7 +76,7 @@ $ ./train_dit+vae.sh
 
 ## D. 模型推論
 
-1. 將微調好 Stable Audio Open 的模型 unwrap
+1. 將微調好 Stable Audio Open 的模型 unwrap（雲端硬碟中的模型檔已經 unwrap 過，可跳過此步驟）
 
     ```bash
     $ python3 ./unwrap_model.py \
@@ -94,11 +94,3 @@ $ ./train_dit+vae.sh
     --model-config stable-audio-open-1.0/model_config.json \
     --ckpt-path model_unwrap.ckpt \
     ```
-
-# 訓練完的模型檔
-
-<TODO>
-
-# 技術文件
-
-<TODO>
