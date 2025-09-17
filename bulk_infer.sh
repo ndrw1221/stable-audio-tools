@@ -1,10 +1,11 @@
 python bulk_inference.py \
 --model-config stable_audio_tools/configs/model_configs/txt2audio/sao_anime/stable_audio_open_1_0_anime.json \
 --ckpt-path unwrapped_ckpt/sao-anime-new-step=660000.ckpt \
---prompts test_prompts.txt \
+--prompts /mnt/gestalt/home/ndrw1221/lab-projects/new-anime-dataset-preprocess/new_anime_eval_prompts.txt \
 --output-dir evaluation_outputs/sao_anime_new_660k \
 --steps 150 \
 --cfg-scale 7.0 \
+--batch-size 8 \
 --seconds-start 20 \
 --seconds-total 180 \
 --include-seed-in-filename \

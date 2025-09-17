@@ -104,28 +104,42 @@ def generate_audio_batch(
     # Ensure output directory exists
     os.makedirs(output_dir, exist_ok=True)
 
-    for i, prompt in enumerate(prompts):
-        print(f"\n[{i+1}/{len(prompts)}] Generating: {prompt}")
+    # Process prompts in batches
+    batch_size = args.batch_size
+    num_batches = (len(prompts) + batch_size - 1) // batch_size
 
-        # Prepare conditioning
-        conditioning = [
-            {
-                "prompt": prompt,
-                "seconds_start": args.seconds_start,
-                "seconds_total": args.seconds_total,
-            }
-        ]
+    for batch_idx in range(num_batches):
+        start_idx = batch_idx * batch_size
+        end_idx = min(start_idx + batch_size, len(prompts))
+        batch_prompts = prompts[start_idx:end_idx]
+        current_batch_size = len(batch_prompts)
+
+        print(f"\n=== Batch {batch_idx + 1}/{num_batches} ===")
+        print(f"Processing {current_batch_size} prompts: {start_idx + 1}-{end_idx}")
+
+        # Prepare conditioning for the entire batch
+        conditioning = []
+        for prompt in batch_prompts:
+            conditioning.append(
+                {
+                    "prompt": prompt,
+                    "seconds_start": args.seconds_start,
+                    "seconds_total": args.seconds_total,
+                }
+            )
 
         # Prepare negative conditioning if provided
         negative_conditioning = None
         if args.negative_prompt:
-            negative_conditioning = [
-                {
-                    "prompt": args.negative_prompt,
-                    "seconds_start": args.seconds_start,
-                    "seconds_total": args.seconds_total,
-                }
-            ]
+            negative_conditioning = []
+            for _ in batch_prompts:
+                negative_conditioning.append(
+                    {
+                        "prompt": args.negative_prompt,
+                        "seconds_start": args.seconds_start,
+                        "seconds_total": args.seconds_total,
+                    }
+                )
 
         # Set seed for reproducible generation
         seed = args.seed if args.seed != -1 else None
@@ -135,17 +149,17 @@ def generate_audio_batch(
             seed = np.random.randint(0, 2**32 - 1)
 
         try:
-            # Generate audio
+            # Generate audio for the entire batch
             start_time = time.time()
 
             if model_type == "diffusion_cond":
-                audio = generate_diffusion_cond(
+                audio_batch = generate_diffusion_cond(
                     model=model,
                     conditioning=conditioning,
                     negative_conditioning=negative_conditioning,
                     steps=args.steps,
                     cfg_scale=args.cfg_scale,
-                    batch_size=1,
+                    batch_size=current_batch_size,
                     sample_size=sample_size,
                     seed=seed,
                     device=device,
@@ -161,59 +175,144 @@ def generate_audio_batch(
 
             generation_time = time.time() - start_time
 
-            # Process audio output
-            audio = rearrange(audio, "b d n -> d (b n)")
-            audio = (
-                audio.to(torch.float32).div(torch.max(torch.abs(audio))).clamp(-1, 1)
+            # Process and save each audio sample in the batch
+            for i, (prompt, audio) in enumerate(zip(batch_prompts, audio_batch)):
+                global_idx = start_idx + i
+
+                # Process audio output (audio is already a single sample from the batch)
+                audio = audio.to(torch.float32)
+                # Normalize audio
+                max_val = torch.max(torch.abs(audio))
+                if max_val > 0:
+                    audio = audio.div(max_val).clamp(-1, 1)
+
+                # Cut to requested duration if specified
+                if args.cut_to_seconds_total:
+                    audio = audio[:, : args.seconds_total * sample_rate]
+
+                # Create output filename
+                safe_prompt = sanitize_filename(prompt, max_length=50)
+                if args.include_seed_in_filename:
+                    filename = f"{global_idx+1:03d}_{safe_prompt}_seed{seed}.wav"
+                else:
+                    filename = f"{global_idx+1:03d}_{safe_prompt}.wav"
+
+                output_path = os.path.join(output_dir, filename)
+
+                # Save audio as 16-bit WAV
+                audio_int16 = audio.mul(32767).to(torch.int16).cpu()
+                torchaudio.save(output_path, audio_int16, sample_rate)
+
+                print(f"  ✓ [{global_idx+1:03d}] {filename}")
+
+                # Save metadata if requested
+                if args.save_metadata:
+                    metadata = {
+                        "prompt": prompt,
+                        "negative_prompt": args.negative_prompt,
+                        "seed": seed,
+                        "steps": args.steps,
+                        "cfg_scale": args.cfg_scale,
+                        "sampler_type": args.sampler_type,
+                        "sigma_min": args.sigma_min,
+                        "sigma_max": args.sigma_max,
+                        "rho": args.rho,
+                        "seconds_start": args.seconds_start,
+                        "seconds_total": args.seconds_total,
+                        "generation_time": generation_time
+                        / current_batch_size,  # Average time per sample
+                        "sample_rate": sample_rate,
+                        "model_type": model_type,
+                        "batch_size": current_batch_size,
+                        "batch_index": batch_idx,
+                    }
+
+                    metadata_path = output_path.replace(".wav", "_metadata.json")
+                    with open(metadata_path, "w") as f:
+                        json.dump(metadata, f, indent=2)
+
+            print(
+                f"  Batch completed in {generation_time:.1f}s ({generation_time/current_batch_size:.1f}s per sample)"
             )
 
-            # Cut to requested duration if specified
-            if args.cut_to_seconds_total:
-                audio = audio[:, : args.seconds_total * sample_rate]
-
-            # Create output filename
-            safe_prompt = sanitize_filename(prompt, max_length=50)
-            if args.include_seed_in_filename:
-                filename = f"{i+1:03d}_{safe_prompt}_seed{seed}.wav"
-            else:
-                filename = f"{i+1:03d}_{safe_prompt}.wav"
-
-            output_path = os.path.join(output_dir, filename)
-
-            # Save audio as 16-bit WAV
-            audio_int16 = audio.mul(32767).to(torch.int16).cpu()
-            torchaudio.save(output_path, audio_int16, sample_rate)
-
-            print(f"✓ Saved: {filename} (took {generation_time:.1f}s)")
-
-            # Save metadata if requested
-            if args.save_metadata:
-                metadata = {
-                    "prompt": prompt,
-                    "negative_prompt": args.negative_prompt,
-                    "seed": seed,
-                    "steps": args.steps,
-                    "cfg_scale": args.cfg_scale,
-                    "sampler_type": args.sampler_type,
-                    "sigma_min": args.sigma_min,
-                    "sigma_max": args.sigma_max,
-                    "rho": args.rho,
-                    "seconds_start": args.seconds_start,
-                    "seconds_total": args.seconds_total,
-                    "generation_time": generation_time,
-                    "sample_rate": sample_rate,
-                    "model_type": model_type,
-                }
-
-                metadata_path = output_path.replace(".wav", "_metadata.json")
-                with open(metadata_path, "w") as f:
-                    json.dump(metadata, f, indent=2)
-
         except Exception as e:
-            print(f"✗ Error generating audio for prompt '{prompt}': {e}")
-            continue
+            print(f"✗ Error generating audio for batch {batch_idx + 1}: {e}")
+            # Fall back to individual processing for this batch
+            print(f"  Falling back to individual processing for this batch...")
 
-        # Clear cache periodically
+            for i, prompt in enumerate(batch_prompts):
+                global_idx = start_idx + i
+                print(f"  [{global_idx+1}/{len(prompts)}] Generating: {prompt}")
+
+                try:
+                    # Generate individual sample
+                    individual_conditioning = [
+                        {
+                            "prompt": prompt,
+                            "seconds_start": args.seconds_start,
+                            "seconds_total": args.seconds_total,
+                        }
+                    ]
+
+                    individual_negative_conditioning = None
+                    if args.negative_prompt:
+                        individual_negative_conditioning = [
+                            {
+                                "prompt": args.negative_prompt,
+                                "seconds_start": args.seconds_start,
+                                "seconds_total": args.seconds_total,
+                            }
+                        ]
+
+                    start_time = time.time()
+                    audio = generate_diffusion_cond(
+                        model=model,
+                        conditioning=individual_conditioning,
+                        negative_conditioning=individual_negative_conditioning,
+                        steps=args.steps,
+                        cfg_scale=args.cfg_scale,
+                        batch_size=1,
+                        sample_size=sample_size,
+                        seed=seed,
+                        device=device,
+                        sampler_type=args.sampler_type,
+                        sigma_min=args.sigma_min,
+                        sigma_max=args.sigma_max,
+                        rho=args.rho,
+                    )
+                    individual_time = time.time() - start_time
+
+                    # Process audio output
+                    audio = rearrange(audio, "b d n -> d (b n)")
+                    audio = audio.to(torch.float32)
+                    max_val = torch.max(torch.abs(audio))
+                    if max_val > 0:
+                        audio = audio.div(max_val).clamp(-1, 1)
+
+                    # Cut to requested duration if specified
+                    if args.cut_to_seconds_total:
+                        audio = audio[:, : args.seconds_total * sample_rate]
+
+                    # Create output filename
+                    safe_prompt = sanitize_filename(prompt, max_length=50)
+                    if args.include_seed_in_filename:
+                        filename = f"{global_idx+1:03d}_{safe_prompt}_seed{seed}.wav"
+                    else:
+                        filename = f"{global_idx+1:03d}_{safe_prompt}.wav"
+
+                    output_path = os.path.join(output_dir, filename)
+
+                    # Save audio as 16-bit WAV
+                    audio_int16 = audio.mul(32767).to(torch.int16).cpu()
+                    torchaudio.save(output_path, audio_int16, sample_rate)
+
+                    print(f"    ✓ {filename} (took {individual_time:.1f}s)")
+
+                except Exception as individual_e:
+                    print(f"    ✗ Error generating '{prompt}': {individual_e}")
+                    continue
+
+        # Clear cache after each batch
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
 
@@ -270,6 +369,9 @@ def main():
     )
     parser.add_argument(
         "--cfg-scale", type=float, default=6.0, help="Classifier-free guidance scale"
+    )
+    parser.add_argument(
+        "--batch-size", type=int, default=1, help="Batch size for parallel generation"
     )
     parser.add_argument(
         "--sampler-type",
@@ -387,6 +489,7 @@ def main():
     print(f"  Duration: {args.seconds_total} seconds")
     print(f"  Steps: {args.steps}")
     print(f"  CFG scale: {args.cfg_scale}")
+    print(f"  Batch size: {args.batch_size}")
     print(f"  Sampler: {args.sampler_type}")
     print(f"  Device: {args.device}")
     print(f"  Output dir: {args.output_dir}")
