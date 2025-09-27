@@ -1,0 +1,12 @@
+python bulk_inference.py \
+--model-config stable_audio_tools/configs/model_configs/txt2audio/sao_pili/stable_audio_open_1_0_tags.json \
+--ckpt-path unwrapped_ckpt/sao-pili-tags-step=100000.ckpt \
+--prompts /mnt/gestalt/home/ndrw1221/datasets/pili/pili_no_vocals_47s/pili_eval_dataset.txt \
+--output-dir evaluation_outputs/sao_pili_tags_100k \
+--steps 150 \
+--cfg-scale 7.0 \
+--batch-size 8 \
+--seconds-start 20 \
+--seconds-total 180 \
+--include-seed-in-filename \
+--save-metadata \

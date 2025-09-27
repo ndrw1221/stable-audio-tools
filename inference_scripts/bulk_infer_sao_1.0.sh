@@ -1,0 +1,11 @@
+python bulk_inference.py \
+--model-config stable-audio-open-1.0/model_config.json \
+--ckpt-path stable-audio-open-1.0/model.ckpt \
+--prompts prompts.txt \
+--output-dir evaluation_outputs/sao_1_0_temp \
+--steps 150 \
+--cfg-scale 7.0 \
+--batch-size 6 \
+--seconds-start 20 \
+--seconds-total 180 \
+--include-seed-in-filename \

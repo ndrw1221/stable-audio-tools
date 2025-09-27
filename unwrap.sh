@@ -1,4 +1,4 @@
 python unwrap_model.py \
---model-config stable_audio_tools/configs/model_configs/txt2audio/sao_audio_prompt/stable_audio_open_1_0_audio_prompt+text.json \
---ckpt-path /home/ndrw1221/lab-projects/stable-audio-tools/output/sao-anime-audio-prompt/musiccoca-emb/checkpoints/epoch=1719-step=490000.ckpt \
---name sao-anime-audio-prompt-step=490000 \
+--model-config stable_audio_tools/configs/model_configs/txt2audio/sao_pili/stable_audio_open_1_0_tags.json \
+--ckpt-path 'output/sao-pili/tags-dit + vae_dec cont./checkpoints/epoch=155-step=100000.ckpt' \
+--name sao-pili-tags-step=100000 \
