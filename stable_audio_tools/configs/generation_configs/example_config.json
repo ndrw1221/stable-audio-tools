@@ -1,0 +1,38 @@
+{
+    "generation": {
+        "steps": 100,
+        "cfg_scale": 7.0,
+        "batch_size": 1,
+        "sampler_type": "dpmpp-3m-sde",
+        "sigma_min": 0.01,
+        "sigma_max": 100,
+        "rho": 1.0,
+        "seed": -1
+    },
+    "conditioning_defaults": {
+        "seconds_start": 40,
+        "seconds_total": 150,
+        "negative_prompt": null
+    },
+    "input": {
+        "type": "config",
+        "samples": [
+            {
+                "prompt": "Cyberpunk"
+            },
+            {
+                "prompt": "Demon Slayer"
+            },
+            {
+                "prompt": "No Party For Cao Dong"
+            }
+        ]
+    },
+    "output": {
+        "output_dir": "generated/from_config",
+        "file_format": "mp3 v0",
+        "file_naming": "verbose",
+        "save_metadata": true,
+        "cut_to_seconds_total": true
+    }
+}

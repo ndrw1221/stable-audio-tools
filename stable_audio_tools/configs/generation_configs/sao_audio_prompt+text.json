@@ -1,0 +1,66 @@
+{
+    "generation": {
+        "steps": 100,
+        "cfg_scale": 7.0,
+        "batch_size": 1,
+        "sampler_type": "dpmpp-3m-sde",
+        "sigma_min": 0.01,
+        "sigma_max": 100,
+        "rho": 1.0,
+        "seed": -1
+    },
+    "conditioning_defaults": {
+        "prompt": "",
+        "audio_prompt": null,
+        "seconds_start": 90,
+        "seconds_total": 180,
+        "negative_prompt": null
+    },
+    "input": {
+        "type": "config",
+        "samples": [
+            {
+                "audio_prompt": "/mnt/gestalt/home/ndrw1221/lab-projects/magenta-rt/musiccoca_validation/emb/龙猫乐队-Totoro.npy"
+            },
+            {
+                "audio_prompt": "/mnt/gestalt/home/ndrw1221/lab-projects/magenta-rt/musiccoca_validation/emb/龙猫乐队-Totoro.npy",
+                "prompt": "A Jazz piece featuring saxophone and piano, with a smooth and relaxing vibe."
+            },
+            {
+                "audio_prompt": "/mnt/gestalt/home/ndrw1221/lab-projects/magenta-rt/musiccoca_validation/emb/佐橋俊彦-嵐の到来.npy"
+            },
+            {
+                "audio_prompt": "/mnt/gestalt/home/ndrw1221/lab-projects/magenta-rt/musiccoca_validation/emb/佐橋俊彦-嵐の到来.npy",
+                "prompt": "A electronic dance music track with a fast tempo, heavy bass, and energetic synths."
+            },
+            {
+                "audio_prompt": "/mnt/gestalt/home/ndrw1221/lab-projects/magenta-rt/musiccoca_validation/emb/RDGLDGRN-Double Dutch.npy"
+            },
+            {
+                "audio_prompt": "/mnt/gestalt/home/ndrw1221/lab-projects/magenta-rt/musiccoca_validation/emb/RDGLDGRN-Double Dutch.npy",
+                "prompt": "A lofi music track with a chill and laid-back vibe, featuring soft beats and mellow melodies."
+            },
+            {
+                "audio_prompt": "/mnt/gestalt/home/ndrw1221/lab-projects/magenta-rt/musiccoca_validation/emb/SUPER EUROBEAT-MAKE YOUR MOVE.npy"
+            },
+            {
+                "audio_prompt": "/mnt/gestalt/home/ndrw1221/lab-projects/magenta-rt/musiccoca_validation/emb/SUPER EUROBEAT-MAKE YOUR MOVE.npy",
+                "prompt": "A high-energy rock song with powerful guitar riffs, driving drums, and anthemic vocals."
+            },
+            {
+                "audio_prompt": "/mnt/gestalt/home/ndrw1221/lab-projects/magenta-rt/musiccoca_validation/emb/ボイジャー-Shine Your Orb(TVサイズ).npy"
+            },
+            {
+                "audio_prompt": "/mnt/gestalt/home/ndrw1221/lab-projects/magenta-rt/musiccoca_validation/emb/ボイジャー-Shine Your Orb(TVサイズ).npy",
+                "prompt": "An funky groove track with a catchy bassline, rhythmic guitar, and vibrant horn section."
+            }
+        ]
+    },
+    "output": {
+        "output_dir": "generated/sao_audio_prompt+text",
+        "file_format": "mp3 v0",
+        "file_naming": "verbose",
+        "save_metadata": true,
+        "cut_to_seconds_total": true
+    }
+}
