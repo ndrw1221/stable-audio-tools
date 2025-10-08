@@ -161,7 +161,11 @@ def main():
     else:
         logger = None
         checkpoint_dir = args.save_dir if args.save_dir else None
-        demo_dir = None
+        if args.save_dir and args.name and run_name:
+            demo_dir = os.path.join(args.save_dir, args.name, run_name, "demos")
+            os.makedirs(demo_dir, exist_ok=True)
+        else:
+            demo_dir = None
 
     ckpt_callback = pl.callbacks.ModelCheckpoint(
         every_n_train_steps=args.checkpoint_every, dirpath=checkpoint_dir, save_top_k=-1
