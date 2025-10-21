@@ -1,9 +1,9 @@
 python3 train.py \
---dataset-config stable_audio_tools/configs/dataset_configs/audio_prompt/musiccocoa_emb+text.json \
---model-config stable_audio_tools/configs/model_configs/txt2audio/sao_audio_prompt/stable_audio_open_1_0_audio_prompt+text.json \
---ckpt-path output/sao-anime-audio-prompt/musiccoca-emb+text/checkpoints/epoch=842-step=240000.ckpt \
+--dataset-config stable_audio_tools/configs/dataset_configs/audio_prompt/musiccocoa_emb.json \
+--model-config stable_audio_tools/configs/model_configs/txt2audio/sao_audio_prompt/stable_audio_open_1_0_audio_prompt_no_pool.json \
+--pretrained-ckpt-path stable-audio-open-1.0/model.ckpt \
 --save-dir /mnt/gestalt/home/ndrw1221/stable_audio_tools_output \
 --name sao-anime-audio-prompt \
---run-name musiccoca-emb+text \
---checkpoint-every 40000 \
+--run-name musiccoca-emb-no-pool \
+--checkpoint-every 20000 \
 --batch-size 8 \
